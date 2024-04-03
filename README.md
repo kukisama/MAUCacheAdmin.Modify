@@ -32,7 +32,7 @@ cd c:\macupdate
 | `maupath`    | `C:\inetpub\wwwroot\maunew6`| 用户可以在运行脚本时指定MAU存储离线文件的（Microsoft AutoUpdate）路径。如果未指定，则使用此默认值。 |
 | `mautemppath`| `c:\MACupdate\temp`         | 用户可以在运行脚本时指定MAU临时路径。如果未指定，则使用此默认值。 |
 
-下面是一个可能的例子
+下面是一个带参数的，可能的例子
 ```powershell
 cd c:\macupdate
 .\MacUpdatesOffice.Modify.ps1  -workPath "D:\NewWorkPath" -maupath "D:\NewMauPath" -mautemppath "D:\NewTempPath"
