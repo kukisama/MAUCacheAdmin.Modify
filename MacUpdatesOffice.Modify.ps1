@@ -2,13 +2,36 @@
   # 用户可以在运行脚本时指定工作路径，如果未指定则使用默认值"c:\MACupdate"
   [string]$workPath = "c:\MACupdate",
   # 用户可以在运行脚本时指定MAU存储离线文件的路径，如果未指定则使用默认值"C:\inetpub\wwwroot\maunew6"
-  [string]$maupath = "C:\inetpub\wwwroot\maunew6",
+  [string]$maupath = "C:\inetpub\wwwroot\maucache",
   # 用户可以在运行脚本时指定MAU临时路径，如果未指定则使用默认值"c:\MACupdate\temp"
   [string]$mautemppath = "c:\MACupdate\temp"
 )
 
 # Change to the specified work directory
 Set-Location $workPath
+
+
+$filesToDelete = @(
+    "Lync Installer.pkg",
+    "MicrosoftTeams.pkg",
+    "Teams_osx.pkg",
+    "wdav-upgrade.pkg",
+    "*.xml",
+    "*.cat"
+)
+
+foreach ($file in $filesToDelete) {
+    $fullPathPattern = Join-Path -Path $maupath -ChildPath $file
+
+    $matchingFiles = Get-ChildItem -Path $fullPathPattern -ErrorAction SilentlyContinue
+
+    foreach ($matchingFile in $matchingFiles) {
+        if (Test-Path $matchingFile.FullName) {
+            Write-Host "Deleting file: $($matchingFile.FullName)"
+            Remove-Item $matchingFile.FullName -Force
+        }
+    }
+}
 
 # Import the MAUCacheAdmin module
 Import-Module .\PSModule\MAUCacheAdmin\MAUCacheAdmin.psm1
