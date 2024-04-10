@@ -25,20 +25,21 @@ wdav-upgrade.pkg
 ## 使用方法
 准备一台Windows服务器，确保可以联网，下载本项目
 
-将项目解压到本地 `c:\macupdate`下
+正常解压，它应该存储在这里
+ `c:\MAUCacheAdmin.Modify-main`
 
 执行powershell
 ```powershell
-cd c:\macupdate
+cd c:\MAUCacheAdmin.Modify-main
 .\MacUpdatesOffice.Modify.ps1
 ```
 或者可以手动指定参数
 这里使用了一些参数
 | 参数         | 默认值                      | 描述                                                         |
 | ------------ | --------------------------- | ------------------------------------------------------------ |
-| `workPath`   | `c:\MACupdate`              | 用户可以在运行脚本时指定工作路径。如果未指定，则使用此默认值。 |
+| `workPath`   | `c:\MAUCacheAdmin.Modify-main`              | 用户可以在运行脚本时指定工作路径。如果未指定，则使用此默认值。 |
 | `maupath`    | `C:\inetpub\wwwroot\maunew6`| 用户可以在运行脚本时指定MAU存储离线文件的（Microsoft AutoUpdate）路径。如果未指定，则使用此默认值。 |
-| `mautemppath`| `c:\MACupdate\temp`         | 用户可以在运行脚本时指定MAU临时路径。如果未指定，则使用此默认值。 |
+| `mautemppath`| `c:\MAUCacheAdmin.Modify-main\temp`         | 用户可以在运行脚本时指定MAU临时路径。如果未指定，则使用此默认值。 |
 
 下面是一个带参数的，可能的例子
 ```powershell
