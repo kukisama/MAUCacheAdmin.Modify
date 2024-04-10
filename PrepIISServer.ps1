@@ -13,15 +13,12 @@ Import-Module WebAdministration
 # Use AppCmd.exe to set the physical path of the default website.
 $siteName = "Default Web Site"
 $sitePathArgument = "physicalPath:" + $sitePath
-#& "$env:windir\system32\inetsrv\appcmd.exe" set site /site.name:"$siteName" /[$sitePathArgument]
-#& "$env:windir\system32\inetsrv\appcmd.exe" set vdir "$siteName/" -physicalPath:$sitePath
 Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $sitePath
 
 # Enable directory browsing.
 Write-Host "Enabling directory browsing..."
-#& "$env:windir\system32\inetsrv\appcmd.exe" set config /section:directoryBrowse /enabled:true
 Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/directoryBrowse" -name "enabled" -value "True"
-Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -location 'Default Web Site' -filter "system.webServer/directoryBrowse" -name "enabled" -value $true
+Set-WebConfigurationProperty -pspath "IIS:\Sites\$siteName" -filter "system.webServer/directoryBrowse" -name "enabled" -value $true
 
 # Add MIME types for .pkg, .cat, .xml, .mpkg files.
 $mimeTypes = @(
