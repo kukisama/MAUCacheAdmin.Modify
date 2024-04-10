@@ -18,6 +18,7 @@ $filesToDelete = @(
     "Teams_osx.pkg",
     "wdav-upgrade.pkg",
     "*.xml",
+    "builds.txt",
     "*.cat"
 )
 
