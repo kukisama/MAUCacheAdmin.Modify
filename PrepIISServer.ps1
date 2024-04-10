@@ -8,17 +8,22 @@ If (-Not (Test-Path $sitePath)) {
     New-Item -Path $sitePath -Type Directory
 }
 
+Import-Module WebAdministration
+
 # Use AppCmd.exe to set the physical path of the default website.
 $siteName = "Default Web Site"
 $sitePathArgument = "physicalPath:" + $sitePath
 #& "$env:windir\system32\inetsrv\appcmd.exe" set site /site.name:"$siteName" /[$sitePathArgument]
-& "$env:windir\system32\inetsrv\appcmd.exe" set vdir "$siteName/" -physicalPath:$sitePath
+#& "$env:windir\system32\inetsrv\appcmd.exe" set vdir "$siteName/" -physicalPath:$sitePath
+Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $sitePath
+
 # Enable directory browsing.
 Write-Host "Enabling directory browsing..."
-& "$env:windir\system32\inetsrv\appcmd.exe" set config /section:directoryBrowse /enabled:true
+#& "$env:windir\system32\inetsrv\appcmd.exe" set config /section:directoryBrowse /enabled:true
+Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/directoryBrowse" -name "enabled" -value "True"
+Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -location 'Default Web Site' -filter "system.webServer/directoryBrowse" -name "enabled" -value $true
 
 # Add MIME types for .pkg, .cat, .xml, .mpkg files.
-Write-Host "Adding MIME types..."
 $mimeTypes = @(
     @{extension='.pkg'; mimeType='application/octet-stream'},
     @{extension='.cat'; mimeType='application/octet-stream'},
@@ -27,8 +32,16 @@ $mimeTypes = @(
 )
 
 foreach ($type in $mimeTypes) {
-    & "$env:windir\system32\inetsrv\appcmd.exe" set config /section:staticContent /+"[fileExtension='$($type.extension)',mimeType='$($type.mimeType)']"
+    $mimeTypeExists = Get-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter "system.webServer/staticContent/mimeMap" -name "." | Where-Object { $_.fileExtension -eq $type.extension }
+
+    if ($mimeTypeExists -eq $null) {
+        Write-Host "Adding MIME type $($type.extension)..."
+        Add-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -location "" -filter "system.webServer/staticContent" -name "." -value @{fileExtension=$type.extension; mimeType=$type.mimeType}
+    } else {
+        Write-Host "MIME type $($type.extension) already exists."
+    }
 }
+
 
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}" -Name "IsInstalled" -Value 0
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}" -Name "IsInstalled" -Value 0
