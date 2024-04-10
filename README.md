@@ -7,6 +7,7 @@ Lync Installer.pkg
 MicrosoftTeams.pkg
 Teams_osx.pkg
 wdav-upgrade.pkg
+builds.txt
 ```
 #### update 2024-04-03
 只提供PowerShell的实现
