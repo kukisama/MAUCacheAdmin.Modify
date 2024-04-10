@@ -2,11 +2,12 @@
 
 #### update 2024-04-10
 更新之前，删除所有的xml和cat，以及固定命名的如下文件。便于每次更新都获得最新文件
+```powershell
 Lync Installer.pkg
 MicrosoftTeams.pkg
 Teams_osx.pkg
 wdav-upgrade.pkg
-
+```
 #### update 2024-04-03
 只提供PowerShell的实现
 
