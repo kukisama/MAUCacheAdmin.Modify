@@ -1,10 +1,11 @@
 ﻿param (
   # 用户可以在运行脚本时指定工作路径，如果未指定则使用默认值"c:\MACupdate"
-  [string]$workPath = "c:\MACupdate",
+  [string]$workPath = "C:\MAUCacheAdmin.Modify-main",
   # 用户可以在运行脚本时指定MAU存储离线文件的路径，如果未指定则使用默认值"C:\inetpub\wwwroot\maunew6"
   [string]$maupath = "C:\inetpub\wwwroot\maucache",
   # 用户可以在运行脚本时指定MAU临时路径，如果未指定则使用默认值"c:\MACupdate\temp"
-  [string]$mautemppath = "c:\MACupdate\temp"
+  [string]$mautemppath = "c:\MAUCacheAdmin.Modify-main\temp"
+
 )
 
 # Change to the specified work directory
