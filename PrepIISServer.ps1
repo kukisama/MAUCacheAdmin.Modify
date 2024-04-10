@@ -11,8 +11,8 @@ If (-Not (Test-Path $sitePath)) {
 # Use AppCmd.exe to set the physical path of the default website.
 $siteName = "Default Web Site"
 $sitePathArgument = "physicalPath:" + $sitePath
-& "$env:windir\system32\inetsrv\appcmd.exe" set site /site.name:"$siteName" /[$sitePathArgument]
-
+#& "$env:windir\system32\inetsrv\appcmd.exe" set site /site.name:"$siteName" /[$sitePathArgument]
+& "$env:windir\system32\inetsrv\appcmd.exe" set vdir "$siteName/" -physicalPath:$sitePath
 # Enable directory browsing.
 Write-Host "Enabling directory browsing..."
 & "$env:windir\system32\inetsrv\appcmd.exe" set config /section:directoryBrowse /enabled:true
@@ -30,7 +30,6 @@ foreach ($type in $mimeTypes) {
     & "$env:windir\system32\inetsrv\appcmd.exe" set config /section:staticContent /+"[fileExtension='$($type.extension)',mimeType='$($type.mimeType)']"
 }
 
-# Disable IE ESC
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}" -Name "IsInstalled" -Value 0
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}" -Name "IsInstalled" -Value 0
 
