@@ -49,7 +49,7 @@ $apps = Get-MAUApps -Channel Production
 
 # Save the MAU collaterals
 Save-MAUCollaterals -MAUApps $apps -CachePath $maupath -isProd $true
-Save-oldMAUCollaterals -MAUApps $apps -CachePath $maupath -isProd $true
+Save-oldMAUCollaterals -MAUApps $apps -CachePath $maupath  
 
 # Download the MAU cache for each app
 $apps | ForEach-Object {
