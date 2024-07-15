@@ -25,7 +25,7 @@ $filesToDelete = @(
 foreach ($file in $filesToDelete) {
     $fullPathPattern = Join-Path -Path $maupath -ChildPath $file
 
-    $matchingFiles = Get-ChildItem -Path $fullPathPattern -ErrorAction SilentlyContinue
+    $matchingFiles = Get-ChildItem -Path $fullPathPattern -ErrorAction SilentlyContinue  -Recurse
 
     foreach ($matchingFile in $matchingFiles) {
         if (Test-Path $matchingFile.FullName) {
@@ -49,6 +49,7 @@ $apps = Get-MAUApps -Channel Production
 
 # Save the MAU collaterals
 Save-MAUCollaterals -MAUApps $apps -CachePath $maupath -isProd $true
+Save-oldMAUCollaterals -MAUApps $apps -CachePath $maupath -isProd $true
 
 # Download the MAU cache for each app
 $apps | ForEach-Object {
