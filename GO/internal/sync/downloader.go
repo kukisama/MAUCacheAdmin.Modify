@@ -32,8 +32,14 @@ func ExecuteDownloads(ctx context.Context, client *cdn.Client, jobs []DownloadJo
 	scratchDir := cfg.Storage.ScratchDir
 
 	// 确保目录存在
-	_ = os.MkdirAll(cacheDir, 0750)
-	_ = os.MkdirAll(scratchDir, 0750)
+	if err := os.MkdirAll(cacheDir, 0750); err != nil {
+		log.Error("创建缓存目录失败", "path", cacheDir, "error", err)
+		return DownloadResult{}
+	}
+	if err := os.MkdirAll(scratchDir, 0750); err != nil {
+		log.Error("创建临时目录失败", "path", scratchDir, "error", err)
+		return DownloadResult{}
+	}
 
 	var downloaded, skipped, failed atomic.Int64
 

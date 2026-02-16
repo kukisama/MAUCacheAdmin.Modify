@@ -21,7 +21,10 @@ func SaveCollaterals(ctx context.Context, client *cdn.Client, apps []cdn.AppInfo
 			// 对应 Save-oldMAUCollaterals.ps1 第 20-26 行
 			targetDir = filepath.Join(cacheDir, "collateral", app.Version)
 		}
-		_ = os.MkdirAll(targetDir, 0750)
+		if err := os.MkdirAll(targetDir, 0750); err != nil {
+			log.Warn("创建编录目录失败", "path", targetDir, "error", err)
+			continue
+		}
 
 		// 基础编录 URI
 		// 对应 Save-oldMAUCollaterals.ps1 第 30 行

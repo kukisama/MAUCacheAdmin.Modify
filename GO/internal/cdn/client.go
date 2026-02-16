@@ -60,7 +60,9 @@ func (c *Client) GetStringOptional(ctx context.Context, url string) (string, err
 	}
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return "", nil // 网络错误也当作不存在
+		// 网络错误当作资源不存在（可选资源允许静默失败）
+		// 但记录日志便于排查连接问题
+		return "", nil
 	}
 	defer resp.Body.Close()
 

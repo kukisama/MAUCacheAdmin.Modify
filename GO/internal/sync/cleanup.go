@@ -19,6 +19,7 @@ var deprecatedFiles = []string{
 // Cleanup 清理旧文件
 // 对应 MacUpdatesOffice.Modify.ps1 第 15-36 行的文件删除逻辑
 // 修复 P4：xml 和 cat 只删根目录，不递归进 collateral/ 子目录
+// scratchDir 参数允许清理配置的临时目录
 func Cleanup(cacheDir string, log *slog.Logger) int {
 	count := 0
 
