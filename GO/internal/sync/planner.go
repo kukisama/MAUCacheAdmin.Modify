@@ -66,7 +66,7 @@ func PlanDownloads(ctx context.Context, client *cdn.Client, apps []cdn.AppInfo, 
 			// 对应 Get-MAUCacheDownloadJobs.ps1 第 68-72 行
 			size, lastMod, err := client.Head(ctx, uri)
 			if err != nil {
-				log.Warn("HEAD 请求失败", "uri", uri, "error", err)
+				log.Warn("HEAD 请求失败，跳过此文件", "app", app.AppName, "file", payload, "uri", uri, "error", err)
 				continue
 			}
 
@@ -82,14 +82,24 @@ func PlanDownloads(ctx context.Context, client *cdn.Client, apps []cdn.AppInfo, 
 			// 对应 Invoke-MAUCacheDownload.ps1 第 71-86 行
 			localPath := filepath.Join(cacheDir, payload)
 			fi, err := os.Stat(localPath)
-			if err != nil || fi.Size() != size {
+			if err != nil {
 				job.NeedDownload = true
+				log.Debug("本地缓存不存在，需要下载", "file", payload)
+			} else if fi.Size() != size {
+				job.NeedDownload = true
+				log.Debug("本地缓存大小不匹配，需要重新下载",
+					"file", payload,
+					"local_size", fi.Size(),
+					"remote_size", size,
+				)
+			} else {
+				log.Debug("本地缓存有效", "file", payload, "size", size)
 			}
 
 			allJobs = append(allJobs, job)
 		}
 
-		log.Info("计划完成", "app", app.AppName, "packages", len(filtered))
+		log.Info("计划完成", "app", app.AppName, "version", app.Version, "packages", len(filtered))
 	}
 
 	return allJobs, nil

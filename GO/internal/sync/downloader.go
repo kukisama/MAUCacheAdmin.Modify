@@ -41,6 +41,19 @@ func ExecuteDownloads(ctx context.Context, client *cdn.Client, jobs []DownloadJo
 		return DownloadResult{}
 	}
 
+	needCount := 0
+	for _, j := range jobs {
+		if j.NeedDownload {
+			needCount++
+		}
+	}
+	log.Info("开始执行下载",
+		"total_jobs", len(jobs),
+		"need_download", needCount,
+		"cache_valid", len(jobs)-needCount,
+		"concurrency", cfg.Sync.Concurrency,
+	)
+
 	var downloaded, skipped, failed atomic.Int64
 
 	g, gCtx := errgroup.WithContext(ctx)
@@ -49,7 +62,7 @@ func ExecuteDownloads(ctx context.Context, client *cdn.Client, jobs []DownloadJo
 	for _, job := range jobs {
 		if !job.NeedDownload {
 			skipped.Add(1)
-			log.Info("缓存有效，跳过",
+			log.Debug("缓存有效，跳过",
 				"app", job.AppName,
 				"file", job.Payload,
 			)
@@ -64,6 +77,8 @@ func ExecuteDownloads(ctx context.Context, client *cdn.Client, jobs []DownloadJo
 				log.Error("下载失败",
 					"app", job.AppName,
 					"file", job.Payload,
+					"size_bytes", job.SizeBytes,
+					"url", job.LocationURI,
 					"error", err,
 				)
 				return nil
@@ -90,12 +105,16 @@ func downloadOneFile(ctx context.Context, client *cdn.Client, job DownloadJob, c
 	targetPath := filepath.Join(cacheDir, job.Payload)
 	scratchPath := filepath.Join(scratchDir, job.Payload)
 
+	sizeMB := float64(job.SizeBytes) / 1024 / 1024
 	log.Info("开始下载",
 		"app", job.AppName,
 		"file", job.Payload,
-		"size_mb", job.SizeBytes/1024/1024,
+		"size_bytes", job.SizeBytes,
+		"size_mb", fmt.Sprintf("%.2f", sizeMB),
+		"url", job.LocationURI,
 	)
 
+	dlStart := time.Now()
 	var lastErr error
 	for attempt := 0; attempt < maxRetry; attempt++ {
 		if attempt > 0 {
@@ -103,7 +122,9 @@ func downloadOneFile(ctx context.Context, client *cdn.Client, job DownloadJob, c
 			log.Warn("重试下载",
 				"file", job.Payload,
 				"attempt", attempt+1,
+				"max_retry", maxRetry,
 				"backoff", backoff,
+				"last_error", lastErr,
 			)
 			select {
 			case <-ctx.Done():
@@ -116,9 +137,32 @@ func downloadOneFile(ctx context.Context, client *cdn.Client, job DownloadJob, c
 		if lastErr == nil {
 			break
 		}
+		log.Warn("下载尝试失败",
+			"file", job.Payload,
+			"attempt", attempt+1,
+			"error", lastErr,
+		)
 	}
 	if lastErr != nil {
+		dlDuration := time.Since(dlStart)
+		log.Error("下载最终失败",
+			"file", job.Payload,
+			"total_attempts", maxRetry,
+			"duration", dlDuration.Round(time.Second),
+			"error", lastErr,
+		)
 		return fmt.Errorf("重试 %d 次后仍失败: %w", maxRetry, lastErr)
+	}
+
+	// 验证下载文件大小
+	if fi, err := os.Stat(scratchPath); err == nil {
+		if job.SizeBytes > 0 && fi.Size() != job.SizeBytes {
+			log.Warn("下载文件大小不匹配",
+				"file", job.Payload,
+				"expected_bytes", job.SizeBytes,
+				"actual_bytes", fi.Size(),
+			)
+		}
 	}
 
 	// 原子 rename：scratch → cache
@@ -132,7 +176,14 @@ func downloadOneFile(ctx context.Context, client *cdn.Client, job DownloadJob, c
 		_ = os.Chtimes(targetPath, job.LastMod, job.LastMod)
 	}
 
-	log.Info("下载完成", "file", job.Payload)
+	dlDuration := time.Since(dlStart)
+	speedMBps := sizeMB / dlDuration.Seconds()
+	log.Info("下载完成",
+		"file", job.Payload,
+		"size_mb", fmt.Sprintf("%.2f", sizeMB),
+		"duration", dlDuration.Round(time.Millisecond),
+		"speed_mbps", fmt.Sprintf("%.2f", speedMBps),
+	)
 	return nil
 }
 

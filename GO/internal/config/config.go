@@ -78,6 +78,27 @@ func Load(path string) *Config {
 	return cfg
 }
 
+// LogEffective 输出当前生效的配置（供启动时日志记录）
+func (c *Config) LogEffective(cfgPath string) map[string]interface{} {
+	source := "环境变量/默认值"
+	if cfgPath != "" {
+		source = "YAML 文件: " + cfgPath
+	}
+	return map[string]interface{}{
+		"config_source": source,
+		"channel":       c.Sync.Channel,
+		"interval":      c.Sync.Interval.String(),
+		"concurrency":   c.Sync.Concurrency,
+		"retry_max":     c.Sync.RetryMax,
+		"retry_delay":   c.Sync.RetryDelay.String(),
+		"cache_dir":     c.Storage.CacheDir,
+		"scratch_dir":   c.Storage.ScratchDir,
+		"log_level":     c.Logging.Level,
+		"log_format":    c.Logging.Format,
+		"health_listen": c.Health.Listen,
+	}
+}
+
 // envOr 读取环境变量，不存在则返回默认值
 func envOr(key, defaultVal string) string {
 	if v := os.Getenv(key); v != "" {

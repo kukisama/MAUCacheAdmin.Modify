@@ -13,6 +13,14 @@ import (
 // isProd=true: 保存到 cacheDir 根目录 + 带版本号的编录（对应 Save-MAUCollaterals -isProd $true）
 // isProd=false: 保存到 cacheDir/collateral/{version}/（对应 Save-oldMAUCollaterals）
 func SaveCollaterals(ctx context.Context, client *cdn.Client, apps []cdn.AppInfo, cacheDir string, isProd bool, log *slog.Logger) {
+	mode := "当前版本编录"
+	if !isProd {
+		mode = "历史版本编录"
+	}
+	log.Info("开始保存编录文件", "mode", mode, "app_count", len(apps))
+
+	totalSaved := 0
+	totalFailed := 0
 	for _, app := range apps {
 		var targetDir string
 		if isProd {
@@ -47,6 +55,7 @@ func SaveCollaterals(ctx context.Context, client *cdn.Client, apps []cdn.AppInfo
 			}
 		}
 
+		appSaved := 0
 		for _, uri := range uris {
 			fileName := filepath.Base(uri)
 			outPath := filepath.Join(targetDir, fileName)
@@ -54,6 +63,7 @@ func SaveCollaterals(ctx context.Context, client *cdn.Client, apps []cdn.AppInfo
 			f, err := os.Create(outPath)
 			if err != nil {
 				log.Warn("创建文件失败", "path", outPath, "error", err)
+				totalFailed++
 				continue
 			}
 
@@ -61,20 +71,26 @@ func SaveCollaterals(ctx context.Context, client *cdn.Client, apps []cdn.AppInfo
 			closeErr := f.Close()
 
 			if dlErr != nil {
-				log.Warn("下载编录失败", "uri", uri, "error", dlErr)
+				log.Warn("下载编录失败", "app", app.AppName, "file", fileName, "uri", uri, "error", dlErr)
 				os.Remove(outPath)
+				totalFailed++
 				continue
 			}
 			if closeErr != nil {
 				log.Warn("关闭文件失败", "path", outPath, "error", closeErr)
+				totalFailed++
 				continue
 			}
 
 			if !lastMod.IsZero() {
 				_ = os.Chtimes(outPath, lastMod, lastMod)
 			}
+			appSaved++
 		}
 
-		log.Debug("编录保存完成", "app", app.AppName, "dir", targetDir)
+		totalSaved += appSaved
+		log.Debug("编录保存完成", "app", app.AppName, "version", app.Version, "dir", targetDir, "saved", appSaved, "total_uris", len(uris))
 	}
+
+	log.Info("编录文件保存完成", "mode", mode, "saved", totalSaved, "failed", totalFailed)
 }
