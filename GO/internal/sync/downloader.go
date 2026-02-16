@@ -177,7 +177,10 @@ func downloadOneFile(ctx context.Context, client *cdn.Client, job DownloadJob, c
 	}
 
 	dlDuration := time.Since(dlStart)
-	speedMBps := sizeMB / dlDuration.Seconds()
+	speedMBps := 0.0
+	if dlDuration.Seconds() > 0 {
+		speedMBps = sizeMB / dlDuration.Seconds()
+	}
 	log.Info("下载完成",
 		"file", job.Payload,
 		"size_mb", fmt.Sprintf("%.2f", sizeMB),
