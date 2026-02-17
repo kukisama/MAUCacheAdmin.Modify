@@ -26,6 +26,22 @@ func main() {
 	// 初始化日志
 	log := logging.New(cfg.Logging.Level, cfg.Logging.Format)
 
+	// 记录配置生效信息
+	cfgInfo := cfg.LogEffective(*cfgPath)
+	log.Info("配置加载完成",
+		"config_source", cfgInfo["config_source"],
+		"channel", cfgInfo["channel"],
+		"interval", cfgInfo["interval"],
+		"concurrency", cfgInfo["concurrency"],
+		"retry_max", cfgInfo["retry_max"],
+		"retry_delay", cfgInfo["retry_delay"],
+		"cache_dir", cfgInfo["cache_dir"],
+		"scratch_dir", cfgInfo["scratch_dir"],
+		"log_level", cfgInfo["log_level"],
+		"log_format", cfgInfo["log_format"],
+		"health_listen", cfgInfo["health_listen"],
+	)
+
 	// 优雅退出
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
